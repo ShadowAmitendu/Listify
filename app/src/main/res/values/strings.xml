@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Listify</string>
+    <string name="add_item">Add Item</string>
+    <string name="item_name">Item Name</string>
+    <string name="quantity">Quantity</string>
+    <string name="unit">Unit</string>
+    <string name="category">Category</string>
+    <string name="save">Save Item</string>
+    <string name="export_pdf">Export to PDF</string>
+    <string name="all_items">All Items</string>
+    <string name="to_buy">To Buy</string>
+    <string name="bought">Bought</string>
+    <string name="no_items">No items yet. Tap + to add!</string>
+</resources>
