@@ -26,21 +26,21 @@
 
         <ImageView
             android:id="@+id/widget_refresh"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:layout_marginEnd="12dp"
             android:contentDescription="@string/refresh_icon"
-            android:src="@android:drawable/ic_popup_sync"
+            android:src="@drawable/ic_refresh_24"
             android:tint="#888888" />
 
         <ImageView
             android:id="@+id/widget_add"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@android:drawable/dialog_holo_light_frame"
-            android:backgroundTint="#ff9999"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="@drawable/ic_launcher_background"
+            android:backgroundTint="#4CAFaa"
             android:padding="6dp"
-            android:src="@android:drawable/ic_input_add"
+            android:src="@drawable/ic_add_24"
             android:tint="#ffffff" />
 
     </LinearLayout>
@@ -154,8 +154,8 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@android:drawable/checkbox_on_background"
-                android:tint="#77dd77" />
+                android:src="@drawable/ic_check_circle_24"
+                 />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -168,14 +168,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Some Item"
+                    android:text="Bread"
                     android:textColor="#ffffff"
                     android:textSize="14sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="THIS 1 pcs • Bakery"
+                    android:text="1 Pack • Bakery"
                     android:textColor="#999999"
                     android:textSize="11sp" />
 
@@ -195,7 +195,7 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@android:drawable/checkbox_off_background"
+                android:src="@drawable/ic_circle_outline_24"
                 android:tint="#999999" />
 
             <LinearLayout
@@ -209,14 +209,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="random item"
+                    android:text="Milk"
                     android:textColor="#ffffff"
                     android:textSize="14sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1 pcs • Bakery"
+                    android:text="500 ml • Dairy"
                     android:textColor="#999999"
                     android:textSize="11sp" />
 
