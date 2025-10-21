@@ -1,17 +1,20 @@
 package com.amitendubikashdhusiya.listify.data.repository
 
+import android.content.Context
 import com.amitendubikashdhusiya.listify.data.dao.ShoppingItemDao
 import com.amitendubikashdhusiya.listify.data.dao.ShoppingListDao
 import com.amitendubikashdhusiya.listify.data.entity.SavedListItem
 import com.amitendubikashdhusiya.listify.data.entity.ShoppingItem
 import com.amitendubikashdhusiya.listify.data.entity.ShoppingList
+import com.amitendubikashdhusiya.listify.ui.widget.ShoppingListWidgetUpdater
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 
 class ShoppingRepository(
     private val itemDao: ShoppingItemDao,
-    private val listDao: ShoppingListDao
+    private val listDao: ShoppingListDao,
+    private val context: Context
 ) {
     // Item operations
     fun getAllItems(): Flow<List<ShoppingItem>> =
@@ -23,6 +26,8 @@ class ShoppingRepository(
     suspend fun insertItem(item: ShoppingItem) {
         try {
             itemDao.insertItem(item)
+            // Update widget after inserting item
+            ShoppingListWidgetUpdater.triggerWidgetUpdate(context)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -31,6 +36,8 @@ class ShoppingRepository(
     suspend fun updateItem(item: ShoppingItem) {
         try {
             itemDao.updateItem(item)
+            // Update widget after updating item
+            ShoppingListWidgetUpdater.triggerWidgetUpdate(context)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -39,6 +46,8 @@ class ShoppingRepository(
     suspend fun deleteItem(item: ShoppingItem) {
         try {
             itemDao.deleteItem(item)
+            // Update widget after deleting item
+            ShoppingListWidgetUpdater.triggerWidgetUpdate(context)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -100,6 +109,9 @@ class ShoppingRepository(
                 // Mark this list as active
                 listDao.deactivateAllLists()
                 listDao.activateList(listId)
+
+                // Update widget after loading list
+                ShoppingListWidgetUpdater.triggerWidgetUpdate(context)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -130,6 +142,9 @@ class ShoppingRepository(
 
                 // Deactivate the list
                 listDao.deactivateAllLists()
+
+                // Update widget after unloading list
+                ShoppingListWidgetUpdater.triggerWidgetUpdate(context)
             }
         } catch (e: Exception) {
             e.printStackTrace()

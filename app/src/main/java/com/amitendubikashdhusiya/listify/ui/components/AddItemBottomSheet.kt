@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -34,9 +36,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.amitendubikashdhusiya.listify.ListifyApplication
+
+// Companion object to store last selected category across compositions
+private object CategoryMemory {
+    var lastSelectedCategory: String? = null
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +57,7 @@ fun AddItemBottomSheet(
 ) {
     val context = LocalContext.current
     val prefsHelper = (context.applicationContext as ListifyApplication).preferencesHelper
+    val focusManager = LocalFocusManager.current
 
     var name by remember { mutableStateOf("") }
     var qty by remember { mutableStateOf("1") }
@@ -73,9 +85,19 @@ fun AddItemBottomSheet(
         (existingCategories + defaultCategories + customCategories).distinct().sorted()
     }
 
+    // Initialize category with last selected or first available
     LaunchedEffect(categories) {
-        if (category.isEmpty() && categories.isNotEmpty()) {
-            category = categories.first()
+        if (category.isEmpty()) {
+            category = when {
+                // First priority: last selected category if it exists
+                CategoryMemory.lastSelectedCategory != null &&
+                        categories.contains(CategoryMemory.lastSelectedCategory) ->
+                    CategoryMemory.lastSelectedCategory!!
+                // Second priority: first category in list
+                categories.isNotEmpty() -> categories.first()
+                // Fallback
+                else -> "Other"
+            }
         }
     }
 
@@ -94,7 +116,15 @@ fun AddItemBottomSheet(
             onValueChange = { name = it },
             label = { Text("Item Name") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = {
+                    focusManager.moveFocus(FocusDirection.Down)
+                }
+            )
         )
 
         Row(
@@ -106,7 +136,16 @@ fun AddItemBottomSheet(
                 onValueChange = { qty = it },
                 label = { Text("Qty") },
                 modifier = Modifier.weight(1f),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    }
+                )
             )
 
             ExposedDropdownMenuBox(
@@ -200,6 +239,8 @@ fun AddItemBottomSheet(
                         text = { Text(cat) },
                         onClick = {
                             category = cat
+                            // Remember the selected category
+                            CategoryMemory.lastSelectedCategory = cat
                             categoryExpanded = false
                         },
                         trailingIcon = if (customCategories.contains(cat) && !existingCategories.contains(
@@ -248,6 +289,9 @@ fun AddItemBottomSheet(
             onClick = {
                 if (name.isNotBlank()) {
                     onSave(name, qty, unit, category)
+                    // Reset only name and qty, keep category and unit
+                    name = ""
+                    qty = "1"
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -267,7 +311,10 @@ fun AddItemBottomSheet(
                     onValueChange = { newCategory = it },
                     label = { Text("Category Name") },
                     singleLine = true,
-                    placeholder = { Text("e.g., Electronics, Pet Food") }
+                    placeholder = { Text("e.g., Electronics, Pet Food") },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    )
                 )
             },
             confirmButton = {
@@ -279,6 +326,7 @@ fun AddItemBottomSheet(
                             }
                             prefsHelper.addCustomCategory(formattedCategory)
                             category = formattedCategory
+                            CategoryMemory.lastSelectedCategory = formattedCategory
                             newCategory = ""
                             showAddCategoryDialog = false
                         }
@@ -311,7 +359,10 @@ fun AddItemBottomSheet(
                     onValueChange = { newUnit = it },
                     label = { Text("Unit Name") },
                     singleLine = true,
-                    placeholder = { Text("e.g., bags, bottles, cans") }
+                    placeholder = { Text("e.g., bags, bottles, cans") },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    )
                 )
             },
             confirmButton = {
@@ -395,6 +446,7 @@ fun AddItemBottomSheet(
                         prefsHelper.deleteCustomCategory(categoryToDelete)
                         if (category == categoryToDelete) {
                             category = categories.firstOrNull() ?: "Other"
+                            CategoryMemory.lastSelectedCategory = category
                         }
                         categoryToDelete = ""
                         showDeleteCategoryDialog = false

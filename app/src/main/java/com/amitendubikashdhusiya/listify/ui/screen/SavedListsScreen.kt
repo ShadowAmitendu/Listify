@@ -1,5 +1,6 @@
 package com.amitendubikashdhusiya.listify.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
@@ -19,7 +20,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CheckCircle
@@ -73,6 +73,11 @@ fun SavedListsScreen(
     var showRenameDialog by remember { mutableStateOf(false) }
     var selectedList by remember { mutableStateOf<ShoppingList?>(null) }
     var newName by remember { mutableStateOf("") }
+
+    // Handle back button press
+    BackHandler {
+        onBack()
+    }
 
     Scaffold(
         topBar = {
@@ -130,8 +135,13 @@ fun SavedListsScreen(
                 itemsIndexed(lists, key = { _, it -> it.id }) { _, list ->
                     SavedListCard(
                         list = list,
-                        onLoad = { onLoadList(list) },
-                        onUnload = { onUnloadList(list) },
+                        onToggleLoad = {
+                            if (list.isActive) {
+                                onUnloadList(list)
+                            } else {
+                                onLoadList(list)
+                            }
+                        },
                         onDelete = {
                             selectedList = list
                             showDeleteDialog = true
@@ -230,8 +240,7 @@ fun SavedListsScreen(
 @Composable
 fun SavedListCard(
     list: ShoppingList,
-    onLoad: () -> Unit,
-    onUnload: () -> Unit,
+    onToggleLoad: () -> Unit,
     onDelete: () -> Unit,
     onRename: () -> Unit,
     modifier: Modifier = Modifier
@@ -244,16 +253,18 @@ fun SavedListCard(
         targetValue = if (list.isActive)
             MaterialTheme.colorScheme.primaryContainer
         else
-            MaterialTheme.colorScheme.surface
+            MaterialTheme.colorScheme.surface,
+        label = "background_color"
     )
     val elevation by animateDpAsState(
-        targetValue = if (list.isActive) 4.dp else 2.dp
+        targetValue = if (list.isActive) 4.dp else 2.dp,
+        label = "elevation"
     )
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onLoad),
+            .clickable(onClick = onToggleLoad),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation)
@@ -272,7 +283,7 @@ fun SavedListCard(
             ) {
                 Icon(
                     if (list.isActive) Icons.Default.CheckCircle else Icons.Default.Bookmark,
-                    contentDescription = null,
+                    contentDescription = if (list.isActive) "Active list" else "Inactive list",
                     tint = if (list.isActive)
                         MaterialTheme.colorScheme.primary
                     else
@@ -307,36 +318,24 @@ fun SavedListCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        if (list.isActive) "Tap to unload" else "Tap to load",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
 
             Box {
-                IconButton(onClick = { showMenu = true }) {
+                IconButton(
+                    onClick = { showMenu = true }
+                ) {
                     Icon(Icons.Default.MoreVert, "Options")
                 }
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
-                    if (list.isActive) {
-                        DropdownMenuItem(
-                            text = { Text("Unload List") },
-                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.OpenInNew, null) },
-                            onClick = {
-                                onUnload()
-                                showMenu = false
-                            }
-                        )
-                    } else {
-                        DropdownMenuItem(
-                            text = { Text("Load List") },
-                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.OpenInNew, null) },
-                            onClick = {
-                                onLoad()
-                                showMenu = false
-                            }
-                        )
-                    }
                     DropdownMenuItem(
                         text = { Text("Rename") },
                         leadingIcon = { Icon(Icons.Default.Edit, null) },

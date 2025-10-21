@@ -86,4 +86,15 @@ dependencies {
 
     // Required for TextFieldState
     implementation(libs.androidx.compose.foundation.vcomposeversion)
+
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
+    // Glance for Widgets (use latest stable version)
+    implementation(libs.androidx.glance.appwidget.v110)
+    implementation(libs.androidx.glance.material3.v110)
+    // Make sure you have these for Glance to work
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.work.runtime.ktx)
+
 }

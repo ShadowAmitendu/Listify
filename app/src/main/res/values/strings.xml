@@ -11,4 +11,7 @@
     <string name="to_buy">To Buy</string>
     <string name="bought">Bought</string>
     <string name="no_items">No items yet. Tap + to add!</string>
+    <string name="widget_description">View your shopping list at a glance</string>
+    <string name="listify">Listify</string>
+    <string name="refresh_icon">refresh icon</string>
 </resources>

@@ -2,6 +2,9 @@
 agp = "8.13.0"
 foundation = "1.7.0"
 foundationVersion = "<compose_version>"
+glanceAppwidget = "1.0.0"
+glanceAppwidgetVersion = "1.1.0"
+glanceMaterial3 = "1.1.0"
 hiltAndroid = "2.57.2"
 hiltAndroidCompiler = "2.48"
 hiltNavigationCompose = "1.1.0"
@@ -21,8 +24,10 @@ materialIconsExtended = "1.5.4"
 roomCommonJvm = "2.8.1"
 roomCompiler = "2.6.1"
 roomKtx = "2.8.1"
+runtime = "1.5.4"
 transportRuntime = "4.0.0"
 material3 = "1.4.0"
+workRuntimeKtx = "2.9.0"
 
 [libraries]
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
@@ -30,11 +35,17 @@ androidx-compose-foundation-vcomposeversion = { module = "androidx.compose.found
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-compose-material3-v130 = { module = "androidx.compose.material3:material3", version.ref = "material3Version" }
 androidx-compose-material3-window-size-class1 = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClass" }
+androidx-compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "runtime" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glanceAppwidget" }
+androidx-glance-appwidget-v110 = { module = "androidx.glance:glance-appwidget", version.ref = "glanceAppwidgetVersion" }
+androidx-glance-material3 = { module = "androidx.glance:glance-material3", version.ref = "glanceAppwidget" }
+androidx-glance-material3-v110 = { module = "androidx.glance:glance-material3", version.ref = "glanceMaterial3" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 hilt-android-compiler-v248 = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }

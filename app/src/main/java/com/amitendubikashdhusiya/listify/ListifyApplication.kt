@@ -21,7 +21,8 @@ class ListifyApplication : Application() {
     val repository by lazy {
         ShoppingRepository(
             database.shoppingItemDao(),
-            database.shoppingListDao()
+            database.shoppingListDao(),
+            applicationContext  // Pass context for widget updates
         )
     }
 

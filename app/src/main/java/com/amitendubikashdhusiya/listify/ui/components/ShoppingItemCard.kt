@@ -53,27 +53,36 @@ fun ShoppingItemCard(
     onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val dismissState = rememberSwipeToDismissBoxState()
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            if (!isSelectionMode) {
+                when (dismissValue) {
+                    SwipeToDismissBoxValue.StartToEnd -> {
+                        onToggleBought()
+                        false // Reset to settled
+                    }
 
-    // Observe the swipe state to trigger actions (only when not in selection mode)
-    LaunchedEffect(dismissState.currentValue) {
-        if (!isSelectionMode) {
-            when (dismissState.currentValue) {
-                SwipeToDismissBoxValue.StartToEnd -> {
-                    onToggleBought()
-                    dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+                    SwipeToDismissBoxValue.EndToStart -> {
+                        true // Allow dismiss to trigger delete with undo
+                    }
+
+                    else -> false
                 }
-
-                SwipeToDismissBoxValue.EndToStart -> {
-                    onDelete()
-                }
-
-                else -> {}
+            } else {
+                false // Disable swipe in selection mode
             }
+        }
+    )
+
+    // Trigger delete when dismissed
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart && !isSelectionMode) {
+            onDelete()
+            dismissState.reset()
         }
     }
 
-    // Smooth swipe progress for animations
+    // Animations
     val swipeFraction = 1f
     val iconScale by animateFloatAsState(
         targetValue = 0.8f + 0.4f * swipeFraction,

@@ -1,6 +1,7 @@
 package com.amitendubikashdhusiya.listify.ui.screen
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -77,6 +79,16 @@ import com.amitendubikashdhusiya.listify.ui.viewmodel.ShoppingViewModel
 import com.amitendubikashdhusiya.listify.ui.viewmodel.ShoppingViewModelFactory
 import kotlinx.coroutines.launch
 
+data class ShareOptions(
+    var showHeading: Boolean = true,
+    var customHeading: String = "My Shopping List",
+    var showSerialNumbers: Boolean = true,
+    var showCheckboxes: Boolean = false,
+    var showSummary: Boolean = true,
+    var showFooter: Boolean = true,
+    var groupByCategory: Boolean = true
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen() {
@@ -97,6 +109,10 @@ fun MainScreen() {
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedItems by remember { mutableStateOf<Set<Int>>(emptySet()) }
 
+    // Share options dialog
+    var showShareOptionsDialog by remember { mutableStateOf(false) }
+    var itemsToShare by remember { mutableStateOf<List<ShoppingItem>>(emptyList()) }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showMenu by remember { mutableStateOf(false) }
@@ -105,6 +121,18 @@ fun MainScreen() {
     fun exitSelectionMode() {
         isSelectionMode = false
         selectedItems = emptySet()
+    }
+
+    // Handle back button press
+    BackHandler(enabled = isSelectionMode || selectedCategory != null || isSearchActive) {
+        when {
+            isSelectionMode -> exitSelectionMode()
+            selectedCategory != null -> selectedCategory = null
+            isSearchActive -> {
+                isSearchActive = false
+                searchQuery = ""
+            }
+        }
     }
 
     // Saved Lists Screen
@@ -197,10 +225,8 @@ fun MainScreen() {
                         IconButton(
                             onClick = {
                                 if (selectedItems.isNotEmpty()) {
-                                    val itemsToShare =
-                                        uiState.items.filter { it.id in selectedItems }
-                                    shareListAsText(context, itemsToShare)
-                                    exitSelectionMode()
+                                    itemsToShare = uiState.items.filter { it.id in selectedItems }
+                                    showShareOptionsDialog = true
                                 }
                             },
                             enabled = selectedItems.isNotEmpty()
@@ -222,6 +248,9 @@ fun MainScreen() {
                             placeholder = { Text("Search items...") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Search
+                            ),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
                                 unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(
@@ -257,6 +286,14 @@ fun MainScreen() {
                             }
                         )
                     },
+                    navigationIcon = {
+                        // Show back arrow when category is selected
+                        if (selectedCategory != null) {
+                            IconButton(onClick = { selectedCategory = null }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back to All")
+                            }
+                        }
+                    },
                     actions = {
                         IconButton(onClick = { isSearchActive = true }) {
                             Icon(Icons.Default.Search, "Search")
@@ -282,7 +319,8 @@ fun MainScreen() {
                                 text = { Text("Share All") },
                                 leadingIcon = { Icon(Icons.Default.Share, null) },
                                 onClick = {
-                                    shareListAsText(context, uiState.items)
+                                    itemsToShare = uiState.items
+                                    showShareOptionsDialog = true
                                     showMenu = false
                                 }
                             )
@@ -594,43 +632,237 @@ fun MainScreen() {
             }
         )
     }
+
+    // Share Options Dialog
+    if (showShareOptionsDialog) {
+        ShareOptionsDialog(
+            items = itemsToShare,
+            onDismiss = { showShareOptionsDialog = false },
+            onShare = { options ->
+                shareListAsText(context, itemsToShare, options)
+                showShareOptionsDialog = false
+                if (isSelectionMode) {
+                    exitSelectionMode()
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun ShareOptionsDialog(
+    items: List<ShoppingItem>,
+    onDismiss: () -> Unit,
+    onShare: (ShareOptions) -> Unit
+) {
+    var options by remember {
+        mutableStateOf(ShareOptions())
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Share, null) },
+        title = { Text("Share Options") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    "Customize your shared list:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                OutlinedTextField(
+                    value = options.customHeading,
+                    onValueChange = { options = options.copy(customHeading = it) },
+                    label = { Text("List Heading") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = options.showHeading,
+                        onCheckedChange = { options = options.copy(showHeading = it) }
+                    )
+                    Text("Show Heading", modifier = Modifier.padding(start = 8.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = options.showSerialNumbers,
+                        onCheckedChange = { options = options.copy(showSerialNumbers = it) }
+                    )
+                    Text("Show Serial Numbers", modifier = Modifier.padding(start = 8.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = options.showCheckboxes,
+                        onCheckedChange = { options = options.copy(showCheckboxes = it) }
+                    )
+                    Text("Show Checkboxes [ ] / [x]", modifier = Modifier.padding(start = 8.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = options.showSummary,
+                        onCheckedChange = { options = options.copy(showSummary = it) }
+                    )
+                    Text("Show Summary", modifier = Modifier.padding(start = 8.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = options.showFooter,
+                        onCheckedChange = { options = options.copy(showFooter = it) }
+                    )
+                    Text(
+                        "Show Footer (Shared via Listify)",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = options.groupByCategory,
+                        onCheckedChange = { options = options.copy(groupByCategory = it) }
+                    )
+                    Text("Group by Category", modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onShare(options) }) {
+                Text("Share")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 private fun shareListAsText(
     context: android.content.Context,
-    items: List<ShoppingItem>
+    items: List<ShoppingItem>,
+    options: ShareOptions
 ) {
     if (items.isEmpty()) return
 
-    val groupedItems = items.groupBy { it.category }
-
     val shareText = buildString {
-        appendLine("*My Shopping List*")
-        appendLine("────────────────────────")
+        // Heading with WhatsApp formatting
+        if (options.showHeading) {
+            appendLine("*${options.customHeading}*")
+            appendLine("----------------------")
+        }
 
-        groupedItems.forEach { (category, categoryItems) ->
-            appendLine("\n*${category.uppercase()}*")
-            categoryItems.forEach { item ->
-                val status = if (item.isBought) "[x]" else "[ ]"
-                appendLine("$status ${item.name} — ${item.quantity} ${item.unit}")
+        var globalSerialNumber = 1
+
+        if (options.groupByCategory) {
+            // Group by category
+            val groupedItems = items.groupBy { it.category }
+
+            groupedItems.forEach { (category, categoryItems) ->
+                appendLine()
+                appendLine("*📦 ${category.uppercase()}*")
+
+                categoryItems.forEach { item ->
+                    val serial = if (options.showSerialNumbers) {
+                        "${globalSerialNumber}. "
+                    } else ""
+
+                    val checkbox = if (options.showCheckboxes) {
+                        if (item.isBought) "✅ " else "⬜ "
+                    } else ""
+
+                    val statusEmoji = if (!options.showCheckboxes) {
+                        if (item.isBought) "✓ " else "• "
+                    } else ""
+
+                    val strikethrough = if (item.isBought && !options.showCheckboxes) "~" else ""
+                    val itemText = "${item.name} _(${item.quantity} ${item.unit})_"
+
+                    appendLine("$serial$checkbox$statusEmoji$strikethrough$itemText$strikethrough")
+                    globalSerialNumber++
+                }
+            }
+        } else {
+            // No grouping - flat list
+            appendLine()
+            items.forEach { item ->
+                val serial = if (options.showSerialNumbers) {
+                    "${globalSerialNumber}. "
+                } else ""
+
+                val checkbox = if (options.showCheckboxes) {
+                    if (item.isBought) "✅ " else "⬜ "
+                } else ""
+
+                val statusEmoji = if (!options.showCheckboxes) {
+                    if (item.isBought) "✓ " else "• "
+                } else ""
+
+                val strikethrough = if (item.isBought && !options.showCheckboxes) "~" else ""
+                val category = if (items.any { it.category != items.first().category })
+                    " [${item.category}]" else ""
+                val itemText = "${item.name} _(${item.quantity} ${item.unit})_$category"
+
+                appendLine("$serial$checkbox$statusEmoji$strikethrough$itemText$strikethrough")
+                globalSerialNumber++
             }
         }
 
-        val totalItems = items.size
-        val boughtItems = items.count { it.isBought }
-        val remainingItems = totalItems - boughtItems
+        // Summary with WhatsApp formatting
+        if (options.showSummary) {
+            val totalItems = items.size
+            val boughtItems = items.count { it.isBought }
+            val remainingItems = totalItems - boughtItems
+            val completionPercent = if (totalItems > 0) (boughtItems * 100) / totalItems else 0
 
-        appendLine("\n────────────────────────")
-        appendLine("*Summary*")
-        appendLine("Total: *$totalItems*")
-        appendLine("Bought: *$boughtItems*")
-        appendLine("Remaining: *$remainingItems*")
-        appendLine("\n_Shared via Listify_")
+            appendLine()
+            appendLine("----------------------")
+            appendLine("*Summary*")
+            appendLine("Total Items: *${totalItems}*")
+            appendLine("Bought: *${boughtItems}*")
+            appendLine("Remaining: *${remainingItems}*")
+            if (totalItems > 0) {
+                appendLine("Progress: *${completionPercent}%*")
+            }
+        }
+
+        // Footer with WhatsApp formatting
+        if (options.showFooter) {
+            appendLine()
+            appendLine("_Shared via Listify_")
+        }
     }
 
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "Shopping List")
+        putExtra(Intent.EXTRA_SUBJECT, options.customHeading)
         putExtra(Intent.EXTRA_TEXT, shareText)
     }
 
